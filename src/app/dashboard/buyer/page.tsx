@@ -1,23 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-
+import { RoleAccessNotice } from "@/components/RoleAccessNotice";
 import { useAuth } from "@/context/AuthContext";
 
 export default function BuyerDashboardPage() {
-  const router = useRouter();
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (!user || user.role !== "BUYER") {
-      router.replace("/login");
-    }
-  }, [router, user]);
-
-  if (!user || user.role !== "BUYER") {
-    return null;
-  }
+  if (!user || user.role !== "BUYER") return <RoleAccessNotice requiredRole="BUYER" />;
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">

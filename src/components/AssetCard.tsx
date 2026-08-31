@@ -105,10 +105,12 @@ export default function AssetCard({
   asset,
   displayCurrency = asset.currency,
   showShareButton = false,
+  viewAssetHref,
 }: {
   asset: Asset;
   displayCurrency?: string;
   showShareButton?: boolean;
+  viewAssetHref?: string;
 }) {
   const [isCopied, setIsCopied] = useState(false);
   const convertedPrice = convertPrice(asset.askingPrice, asset.currency, displayCurrency);
@@ -217,7 +219,7 @@ export default function AssetCard({
                 </button>
               ) : (
                 <Link
-                  href={`/all-listing/${asset.id}`}
+                  href={viewAssetHref ?? `/all-listing/${asset.id}`}
                   className="rounded-full border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-50"
                 >
                   View Asset

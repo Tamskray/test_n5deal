@@ -8,6 +8,7 @@ export function useApiFetch<T>(
   options?: {
     defaultValue?: T;
     enabled?: boolean;
+    headers?: HeadersInit;
   },
 ) {
   const [data, setData] = useState<T | null>(options?.defaultValue ?? null);
@@ -29,6 +30,7 @@ export function useApiFetch<T>(
         const response = await fetch(url, {
           signal: controller.signal,
           cache: "no-store",
+          headers: options?.headers,
         });
 
         if (!response.ok) {

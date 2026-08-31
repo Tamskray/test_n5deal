@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { requireRole } from "@/lib/apiAuth";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -8,9 +9,17 @@ export async function GET(request: Request) {
   const search = searchParams.get("search")?.trim() ?? "";
   const businessType = searchParams.get("tab")?.trim() ?? "";
   const currency = searchParams.get("currency") ?? "EUR";
+  const sellerUserId = searchParams.get("sellerUserId")?.trim() ?? "";
+  const seller = sellerUserId
+    ? ((await prisma.seller.findUnique({ where: { userId: sellerUserId } })) ??
+      (sellerUserId === "demo-seller"
+        ? await prisma.seller.findFirst({ where: { user: { role: "SELLER" } } })
+        : null))
+    : null;
 
   const where = {
     ...(currency ? { currency } : {}),
+    ...(sellerUserId ? { sellerId: seller?.id ?? "__missing_seller__" } : {}),
     ...(businessType ? { typeOfBusiness: { contains: businessType } } : {}),
     ...(search
       ? {
@@ -45,6 +54,7 @@ export async function GET(request: Request) {
     where,
     include: {
       benefits: true,
+      company: true,
       seller: {
         include: {
           user: true,
@@ -55,4 +65,59 @@ export async function GET(request: Request) {
   });
 
   return NextResponse.json(assets);
+}
+
+export async function POST(request: Request) {
+  const authorization = requireRole(request, "SELLER");
+  if (authorization.response) return authorization.response;
+
+  const body = (await request.json()) as {
+    sellerUserId?: string;
+    title?: string;
+    descriptionShort?: string;
+    country?: string;
+    askingPrice?: number | string;
+    currency?: string;
+    typeOfBusiness?: string;
+    typeOfLicense?: string;
+    businessStatus?: string;
+    assetType?: string;
+    regulatory?: string;
+    employees?: string;
+    yearOfIssue?: string;
+  };
+
+  if (!body.title || !body.country || body.askingPrice === undefined || !body.typeOfBusiness) {
+    return NextResponse.json({ error: "Missing required asset fields" }, { status: 400 });
+  }
+
+  const seller =
+    (await prisma.seller.findUnique({ where: { userId: authorization.user.id } })) ??
+    (authorization.user.id === "demo-seller"
+      ? await prisma.seller.findFirst({ where: { user: { role: "SELLER" } } })
+      : null);
+
+  if (!seller) {
+    return NextResponse.json({ error: "Seller not found" }, { status: 404 });
+  }
+
+  const asset = await prisma.asset.create({
+    data: {
+      descriptionShort: body.descriptionShort?.trim() || body.title.trim(),
+      country: body.country.trim(),
+      askingPrice: Number(body.askingPrice),
+      currency: body.currency?.trim() || "EUR",
+      typeOfBusiness: body.typeOfBusiness.trim(),
+      typeOfLicense: body.typeOfLicense?.trim() || "Pending",
+      businessStatus: body.businessStatus?.trim() || "Draft",
+      assetType: body.assetType?.trim() || "Business",
+      regulatory: body.regulatory?.trim() || null,
+      employees: body.employees?.trim() || null,
+      yearOfIssue: body.yearOfIssue?.trim() || null,
+      sellerId: seller.id,
+    },
+    include: { benefits: true, company: true },
+  });
+
+  return NextResponse.json(asset, { status: 201 });
 }

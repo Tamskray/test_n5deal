@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 import AssetCard, { type Asset } from "@/components/AssetCard";
 import { useApiFetch } from "@/hooks/useApiFetch";
 
-export default function AssetDetailPage() {
+function AssetDetailPageContent() {
   const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const fromSeller = searchParams.get("from") === "seller";
   const {
     data: asset,
     loading,
@@ -25,8 +28,11 @@ export default function AssetDetailPage() {
   if (error || !asset) {
     return (
       <div className="space-y-4">
-        <Link href="/all-listing" className="text-sm font-medium text-blue-600 hover:text-blue-700">
-          Back to all listings
+        <Link
+          href={fromSeller ? "/dashboard/seller" : "/all-listing"}
+          className="text-sm font-medium text-blue-600 hover:text-blue-700"
+        >
+          {fromSeller ? "Back to seller dashboard" : "Back to all listings"}
         </Link>
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-10 text-center text-rose-700">
           Asset not found.
@@ -45,8 +51,11 @@ export default function AssetDetailPage() {
           N5deal
         </Link>
         <span aria-hidden="true">›</span>
-        <Link href="/all-listing" className="font-medium text-slate-700 hover:text-slate-900">
-          All Listings
+        <Link
+          href={fromSeller ? "/dashboard/seller" : "/all-listing"}
+          className="font-medium text-slate-700 hover:text-slate-900"
+        >
+          {fromSeller ? "Seller Dashboard" : "All Listings"}
         </Link>
         <span aria-hidden="true">›</span>
         <span className="font-medium text-blue-600">Asset #{asset.id.slice(-4)}</span>
@@ -85,5 +94,13 @@ export default function AssetDetailPage() {
         )}
       </section>
     </div>
+  );
+}
+
+export default function AssetDetailPage() {
+  return (
+    <Suspense fallback={<div className="h-96 rounded-2xl bg-white" />}>
+      <AssetDetailPageContent />
+    </Suspense>
   );
 }
