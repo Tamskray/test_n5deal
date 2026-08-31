@@ -5,7 +5,10 @@ import { useParams, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
 import AssetCard, { type Asset } from "@/components/AssetCard";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { useApiFetch } from "@/hooks/useApiFetch";
+
+import { getAssetBreadcrumbs } from "./constants";
 
 function AssetDetailPageContent() {
   const { id } = useParams<{ id: string }>();
@@ -43,23 +46,7 @@ function AssetDetailPageContent() {
 
   return (
     <div className="space-y-6">
-      <nav
-        aria-label="Breadcrumb"
-        className="flex flex-wrap items-center gap-2 text-sm text-slate-500"
-      >
-        <Link href="/" className="font-medium text-slate-700 hover:text-slate-900">
-          N5deal
-        </Link>
-        <span aria-hidden="true">›</span>
-        <Link
-          href={fromSeller ? "/dashboard/seller" : "/all-listing"}
-          className="font-medium text-slate-700 hover:text-slate-900"
-        >
-          {fromSeller ? "Seller Dashboard" : "All Listings"}
-        </Link>
-        <span aria-hidden="true">›</span>
-        <span className="font-medium text-blue-600">Asset #{asset.id.slice(-4)}</span>
-      </nav>
+      <Breadcrumbs items={getAssetBreadcrumbs(asset.id, fromSeller)} />
 
       <h1 className="text-2xl font-semibold text-slate-900">Asset #{asset.id.slice(-4)}</h1>
 

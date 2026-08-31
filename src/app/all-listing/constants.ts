@@ -1,3 +1,5 @@
+import type { BreadcrumbItem } from "@/components/Breadcrumbs";
+
 export const currencyOptions = [
   { code: "EUR", label: "EUR", symbol: "€" },
   { code: "USD", label: "USD", symbol: "$" },
@@ -15,3 +17,8 @@ export const sortOptions = [
 ] as const;
 
 export const PAGE_SIZE = 5;
+
+export const listingBreadcrumbs: BreadcrumbItem[] = [
+  { label: "N5deal", href: "/" },
+  { label: "All Listings" },
+];
