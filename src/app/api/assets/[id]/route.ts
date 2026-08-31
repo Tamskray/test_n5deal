@@ -53,10 +53,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       descriptionShort: String(body.descriptionShort ?? body.title ?? asset.descriptionShort),
       country: String(body.country ?? asset.country),
       askingPrice: Number(body.askingPrice ?? asset.askingPrice),
+      currency: String(body.currency ?? asset.currency),
       typeOfBusiness: String(body.typeOfBusiness ?? asset.typeOfBusiness),
       businessStatus: String(body.businessStatus ?? asset.businessStatus),
       typeOfLicense: String(body.typeOfLicense ?? asset.typeOfLicense),
       assetType: String(body.assetType ?? asset.assetType),
+      regulatory:
+        body.regulatory === undefined ? asset.regulatory : String(body.regulatory) || null,
+      employees: body.employees === undefined ? asset.employees : String(body.employees) || null,
+      yearOfIssue:
+        body.yearOfIssue === undefined ? asset.yearOfIssue : String(body.yearOfIssue) || null,
     },
     include: { benefits: true, company: true },
   });

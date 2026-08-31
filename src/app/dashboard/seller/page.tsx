@@ -12,10 +12,14 @@ type AssetForm = {
   descriptionShort: string;
   country: string;
   askingPrice: string;
+  currency: string;
   typeOfBusiness: string;
   businessStatus: string;
   typeOfLicense: string;
   assetType: string;
+  regulatory: string;
+  employees: string;
+  yearOfIssue: string;
 };
 
 const emptyForm: AssetForm = {
@@ -23,10 +27,14 @@ const emptyForm: AssetForm = {
   descriptionShort: "",
   country: "",
   askingPrice: "",
+  currency: "EUR",
   typeOfBusiness: "",
   businessStatus: "Operational",
   typeOfLicense: "",
   assetType: "Business",
+  regulatory: "",
+  employees: "",
+  yearOfIssue: "",
 };
 
 export default function SellerDashboardPage() {
@@ -61,10 +69,14 @@ export default function SellerDashboardPage() {
       descriptionShort: asset.descriptionShort,
       country: asset.country,
       askingPrice: String(asset.askingPrice),
+      currency: asset.currency,
       typeOfBusiness: asset.typeOfBusiness,
       businessStatus: asset.businessStatus,
       typeOfLicense: asset.typeOfLicense,
       assetType: asset.assetType,
+      regulatory: asset.regulatory ?? "",
+      employees: asset.employees ?? "",
+      yearOfIssue: asset.yearOfIssue ?? "",
     });
     setShowModal(true);
   }
@@ -186,16 +198,24 @@ export default function SellerDashboardPage() {
                   ["title", "Title"],
                   ["country", "Country"],
                   ["askingPrice", "Price"],
+                  ["currency", "Currency"],
                   ["typeOfBusiness", "Business Type"],
                   ["typeOfLicense", "Type of License"],
                   ["assetType", "Asset Type"],
+                  ["regulatory", "Regulatory"],
+                  ["employees", "Employees"],
+                  ["yearOfIssue", "Year of Issue"],
                 ] as const
               ).map(([name, label]) => (
                 <label key={name} className="text-sm font-medium text-slate-700">
                   {label}
                   <input
                     required={["title", "country", "askingPrice", "typeOfBusiness"].includes(name)}
-                    type={name === "askingPrice" ? "number" : "text"}
+                    type={
+                      name === "askingPrice" || name === "employees" || name === "yearOfIssue"
+                        ? "number"
+                        : "text"
+                    }
                     value={form[name]}
                     onChange={(event) => setForm({ ...form, [name]: event.target.value })}
                     className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal outline-none focus:border-blue-500"
@@ -211,6 +231,7 @@ export default function SellerDashboardPage() {
                 >
                   <option>Operational</option>
                   <option>Growth Stage</option>
+                  <option>Scaling</option>
                   <option>Draft</option>
                 </select>
               </label>
