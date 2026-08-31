@@ -1,18 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 import AssetCard, { type Asset } from "@/components/AssetCard";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useApiFetch } from "@/hooks/useApiFetch";
 
 import { PAGE_SIZE, currencyOptions, sortOptions } from "./constants";
 
 type SortValue = "newest" | "popular" | "priceAsc" | "priceDesc";
 
-export default function AllListingPage() {
+const businessTypeTabs = ["All", "Bank", "Fintech", "Payment", "EMI", "Crypto"] as const;
+
+function AllListingPageContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [displayCurrency, setDisplayCurrency] = useState("EUR");
   const [sortBy, setSortBy] = useState<SortValue>("newest");
+  const [searchInput, setSearchInput] = useState(() => searchParams.get("search") ?? "");
+  const debouncedSearch = useDebounce(searchInput, 350);
+
+  const activeBusinessType = searchParams.get("tab") ?? "";
+  const search = searchParams.get("search") ?? "";
 
   const selectedCurrency =
     currencyOptions.find((option) => option.code === displayCurrency) ?? currencyOptions[0];
@@ -22,9 +34,35 @@ export default function AllListingPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const params = useMemo(() => new URLSearchParams({ sort: sortBy }), [sortBy]);
+  const updateQuery = useCallback(
+    (updates: { search?: string; tab?: string }) => {
+      const params = new URLSearchParams();
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value) {
+          params.set(key, value);
+        } else {
+          params.delete(key);
+        }
+      });
+      router.replace(`${pathname}?${params.toString()}`);
+    },
+    [pathname, router],
+  );
+
+  useEffect(() => {
+    if (debouncedSearch !== search) {
+      updateQuery({ search: debouncedSearch.trim(), tab: activeBusinessType });
+    }
+  }, [activeBusinessType, debouncedSearch, search, updateQuery]);
+
+  const params = useMemo(() => {
+    const nextParams = new URLSearchParams({ sort: sortBy });
+    if (search) nextParams.set("search", search);
+    if (activeBusinessType) nextParams.set("tab", activeBusinessType);
+    return nextParams;
+  }, [activeBusinessType, search, sortBy]);
   const { data, loading, error } = useApiFetch<Asset[]>(`/api/assets?${params.toString()}`, [
-    sortBy,
+    params.toString(),
   ]);
   const assets = data ?? [];
 
@@ -109,6 +147,7 @@ export default function AllListingPage() {
             type="button"
             onClick={() => {
               setSortBy("popular");
+              setCurrentPage(1);
               setShowSortMenu(false);
             }}
             className={`rounded-full px-4 py-2 font-medium shadow-sm ${
@@ -142,6 +181,7 @@ export default function AllListingPage() {
                       type="button"
                       onClick={() => {
                         setSortBy(option.value as SortValue);
+                        setCurrentPage(1);
                         setShowSortMenu(false);
                       }}
                       className={`flex w-full rounded-xl px-3 py-2 text-left text-sm font-medium transition ${
@@ -158,6 +198,51 @@ export default function AllListingPage() {
             ) : null}
           </div>
         </div>
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <label className="flex min-w-0 shrink-0 items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 shadow-sm sm:w-80">
+          <span className="text-slate-400" aria-hidden="true">
+            ⌕
+          </span>
+          <input
+            type="search"
+            value={searchInput}
+            onChange={(event) => {
+              setSearchInput(event.target.value);
+              setCurrentPage(1);
+            }}
+            placeholder="Find the perfect Asset..."
+            className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400"
+            aria-label="Search assets"
+          />
+        </label>
+
+        <nav
+          aria-label="Filter by business type"
+          className="flex min-w-0 flex-1 gap-1 overflow-x-auto rounded-full border border-slate-200 bg-white p-1 shadow-sm"
+        >
+          {businessTypeTabs.map((tab) => {
+            const value = tab === "All" ? "" : tab;
+            const isActive = activeBusinessType === value;
+
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => {
+                  updateQuery({ search, tab: value });
+                  setCurrentPage(1);
+                }}
+                className={`min-w-max flex-1 rounded-full px-3 py-2 text-sm font-semibold transition ${
+                  isActive ? "bg-slate-950 text-white" : "text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                {tab}
+              </button>
+            );
+          })}
+        </nav>
       </div>
 
       <div className={showFilters ? "grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]" : "grid gap-6"}>
@@ -270,5 +355,13 @@ export default function AllListingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AllListingPage() {
+  return (
+    <Suspense fallback={<div className="h-96 rounded-2xl bg-white" />}>
+      <AllListingPageContent />
+    </Suspense>
   );
 }

@@ -1,3 +1,8 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+
 type Benefit = {
   id: string;
   name: string;
@@ -10,6 +15,13 @@ type Seller = {
     email: string;
     role: string;
   } | null;
+};
+
+type Company = {
+  id: string;
+  name: string;
+  overviewText: string;
+  accountDetails: string;
 };
 
 export type Asset = {
@@ -30,6 +42,7 @@ export type Asset = {
   favorites: number;
   dateListed: string;
   seller?: Seller | null;
+  company?: Company | null;
   benefits: Benefit[];
 };
 
@@ -91,11 +104,21 @@ function getFlagEmoji(country: string) {
 export default function AssetCard({
   asset,
   displayCurrency = asset.currency,
+  showShareButton = false,
 }: {
   asset: Asset;
   displayCurrency?: string;
+  showShareButton?: boolean;
 }) {
+  const [isCopied, setIsCopied] = useState(false);
   const convertedPrice = convertPrice(asset.askingPrice, asset.currency, displayCurrency);
+
+  async function copyAssetLink() {
+    const assetUrl = `${window.location.origin}/all-listing/${asset.id}`;
+    await navigator.clipboard.writeText(assetUrl);
+    setIsCopied(true);
+    window.setTimeout(() => setIsCopied(false), 1800);
+  }
 
   return (
     <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_30px_rgba(15,23,42,0.04)] ring-1 ring-slate-100">
@@ -184,12 +207,22 @@ export default function AssetCard({
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="rounded-full border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-50"
-              >
-                View Asset
-              </button>
+              {showShareButton ? (
+                <button
+                  type="button"
+                  onClick={copyAssetLink}
+                  className="rounded-full border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-50"
+                >
+                  {isCopied ? "Link Copied" : "Share"}
+                </button>
+              ) : (
+                <Link
+                  href={`/all-listing/${asset.id}`}
+                  className="rounded-full border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-50"
+                >
+                  View Asset
+                </Link>
+              )}
               <button
                 type="button"
                 className="rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-500"
