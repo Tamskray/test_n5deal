@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  role      String
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  seller    Seller?
+}
+
+model Seller {
+  id       String    @id @default(cuid())
+  userId   String    @unique
+  user     User      @relation(fields: [userId], references: [id])
+  companies Company[]
+  assets   Asset[]
+}
+
+model Company {
+  id            String   @id @default(cuid())
+  name          String
+  overviewText  String
+  accountDetails String
+  sellerId      String?
+  seller        Seller?  @relation(fields: [sellerId], references: [id])
+  assets        Asset[]
+}
+
+model Benefit {
+  id    String  @id @default(cuid())
+  name  String  @unique
+  assets Asset[]
+}
+
+model Asset {
+  id               String   @id @default(cuid())
+  descriptionShort String
+  country          String
+  askingPrice      Float
+  currency         String   @default("EUR")
+  typeOfBusiness   String
+  typeOfLicense    String
+  businessStatus   String
+  assetType        String
+  regulatory       String?
+  employees        String?
+  yearOfIssue      String?
+  isValidated      Boolean  @default(false)
+  views            Int      @default(0)
+  favorites        Int      @default(0)
+  dateListed       DateTime @default(now())
+  sellerId         String
+  seller           Seller   @relation(fields: [sellerId], references: [id])
+  companyId        String?
+  company          Company? @relation(fields: [companyId], references: [id])
+  benefits         Benefit[]
+}
