@@ -42,8 +42,8 @@ export default function ManagerDashboardPage() {
       const matchesRole = roleFilter === "ALL" || managedUser.role === roleFilter;
       const matchesSearch =
         search === "" ||
-        [managedUser.name, managedUser.email, managedUser.role, managedUser.status].some(
-          (value) => value.toLowerCase().includes(search),
+        [managedUser.name, managedUser.email, managedUser.role, managedUser.status].some((value) =>
+          value.toLowerCase().includes(search),
         );
 
       return matchesRole && matchesSearch;
@@ -56,8 +56,8 @@ export default function ManagerDashboardPage() {
     return (assets ?? []).filter(
       (asset) =>
         search === "" ||
-        [asset.descriptionShort, asset.company?.name, asset.currency].some(
-          (value) => value?.toLowerCase().includes(search),
+        [asset.descriptionShort, asset.company?.name, asset.currency].some((value) =>
+          value?.toLowerCase().includes(search),
         ),
     );
   }, [assetSearch, assets]);
