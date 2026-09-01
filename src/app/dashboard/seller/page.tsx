@@ -6,6 +6,14 @@ import AssetCard, { type Asset } from "@/components/AssetCard";
 import { RoleAccessNotice } from "@/components/RoleAccessNotice";
 import { useAuth } from "@/context/AuthContext";
 import { useApiFetch } from "@/hooks/useApiFetch";
+import {
+  ASSET_TYPES,
+  BUSINESS_STATUSES,
+  BUSINESS_TYPES,
+  type AssetType,
+  type BusinessStatus,
+  type BusinessType,
+} from "@/types/asset";
 
 type AssetForm = {
   title: string;
@@ -13,10 +21,10 @@ type AssetForm = {
   country: string;
   askingPrice: string;
   currency: string;
-  typeOfBusiness: string;
-  businessStatus: string;
+  typeOfBusiness: BusinessType | "";
+  businessStatus: BusinessStatus;
   typeOfLicense: string;
-  assetType: string;
+  assetType: AssetType;
   regulatory: string;
   employees: string;
   yearOfIssue: string;
@@ -29,9 +37,9 @@ const emptyForm: AssetForm = {
   askingPrice: "",
   currency: "EUR",
   typeOfBusiness: "",
-  businessStatus: "Operational",
+  businessStatus: "Active",
   typeOfLicense: "",
-  assetType: "Business",
+  assetType: "Active Business (Licensed)",
   regulatory: "",
   employees: "",
   yearOfIssue: "",
@@ -199,9 +207,7 @@ export default function SellerDashboardPage() {
                   ["country", "Country"],
                   ["askingPrice", "Price"],
                   ["currency", "Currency"],
-                  ["typeOfBusiness", "Business Type"],
                   ["typeOfLicense", "Type of License"],
-                  ["assetType", "Asset Type"],
                   ["regulatory", "Regulatory"],
                   ["employees", "Employees"],
                   ["yearOfIssue", "Year of Issue"],
@@ -223,16 +229,55 @@ export default function SellerDashboardPage() {
                 </label>
               ))}
               <label className="text-sm font-medium text-slate-700">
+                Business Type
+                <select
+                  required
+                  value={form.typeOfBusiness}
+                  onChange={(event) =>
+                    setForm({ ...form, typeOfBusiness: event.target.value as BusinessType })
+                  }
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal outline-none focus:border-blue-500"
+                >
+                  <option value="" disabled>
+                    Select a business type
+                  </option>
+                  {BUSINESS_TYPES.map((businessType) => (
+                    <option key={businessType} value={businessType}>
+                      {businessType}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm font-medium text-slate-700">
+                Asset Type
+                <select
+                  value={form.assetType}
+                  onChange={(event) =>
+                    setForm({ ...form, assetType: event.target.value as AssetType })
+                  }
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal outline-none focus:border-blue-500"
+                >
+                  {ASSET_TYPES.map((assetType) => (
+                    <option key={assetType} value={assetType}>
+                      {assetType}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm font-medium text-slate-700">
                 Business Status
                 <select
                   value={form.businessStatus}
-                  onChange={(event) => setForm({ ...form, businessStatus: event.target.value })}
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal"
+                  onChange={(event) =>
+                    setForm({ ...form, businessStatus: event.target.value as BusinessStatus })
+                  }
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal outline-none focus:border-blue-500"
                 >
-                  <option>Operational</option>
-                  <option>Growth Stage</option>
-                  <option>Scaling</option>
-                  <option>Draft</option>
+                  {BUSINESS_STATUSES.map((businessStatus) => (
+                    <option key={businessStatus} value={businessStatus}>
+                      {businessStatus}
+                    </option>
+                  ))}
                 </select>
               </label>
               <label className="text-sm font-medium text-slate-700 sm:col-span-2">

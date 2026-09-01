@@ -89,7 +89,7 @@ function AllListingPageContent() {
         statuses.length === 0 ||
         statuses.some((status) =>
           status === "Active"
-            ? asset.businessStatus === "Operational"
+            ? asset.businessStatus === "Active"
             : asset.assetType.toLowerCase() === "license only",
         );
       const matchesMinimum = minimum === null || asset.askingPrice >= minimum;
@@ -109,7 +109,7 @@ function AllListingPageContent() {
   );
   const statusCounts = useMemo(
     () => ({
-      Active: assets.filter((asset) => asset.businessStatus === "Operational").length,
+      Active: assets.filter((asset) => asset.businessStatus === "Active").length,
       "License Only": assets.filter((asset) => asset.assetType.toLowerCase() === "license only")
         .length,
     }),

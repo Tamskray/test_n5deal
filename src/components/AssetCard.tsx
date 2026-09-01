@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import type { AssetType, BusinessStatus, BusinessType } from "@/types/asset";
+
 type Benefit = {
   id: string;
   name: string;
@@ -30,10 +32,10 @@ export type Asset = {
   country: string;
   askingPrice: number;
   currency: string;
-  typeOfBusiness: string;
+  typeOfBusiness: BusinessType;
   typeOfLicense: string;
-  businessStatus: string;
-  assetType: string;
+  businessStatus: BusinessStatus;
+  assetType: AssetType;
   regulatory?: string | null;
   employees?: string | null;
   yearOfIssue?: string | null;

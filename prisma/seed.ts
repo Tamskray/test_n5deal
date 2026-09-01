@@ -3,6 +3,8 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
+  await prisma.message.deleteMany();
+  await prisma.buyer.deleteMany();
   await prisma.asset.deleteMany();
   await prisma.benefit.deleteMany();
   await prisma.company.deleteMany();
@@ -11,6 +13,7 @@ async function main() {
 
   const user = await prisma.user.create({
     data: {
+      id: "demo-seller",
       email: "seller@marketplace.dev",
       role: "SELLER",
       status: "ACTIVE",
@@ -21,6 +24,44 @@ async function main() {
     data: {
       userId: user.id,
     },
+  });
+
+  const [buyerUser, secondBuyerUser] = await Promise.all([
+    prisma.user.create({
+      data: {
+        id: "demo-buyer",
+        email: "alex.rivera@apexcapital.dev",
+        role: "BUYER",
+        status: "ACTIVE",
+      },
+    }),
+    prisma.user.create({
+      data: {
+        id: "demo-buyer-sophia",
+        email: "sophia.chen@novapayments.dev",
+        role: "BUYER",
+        status: "ACTIVE",
+      },
+    }),
+  ]);
+
+  await prisma.buyer.createMany({
+    data: [
+      {
+        contactName: "Alex Rivera",
+        companyName: "Apex Capital Ventures",
+        investmentInterests:
+          "Looking for European EMI, PI, or Crypto licenses with active client base, budget up to €15M.",
+        userId: buyerUser.id,
+      },
+      {
+        contactName: "Sophia Chen",
+        companyName: "Nova Payments Ltd",
+        investmentInterests:
+          "Seeking operational payment institutions in North America or LatAm (Canada MSB, Brazil PI).",
+        userId: secondBuyerUser.id,
+      },
+    ],
   });
 
   const companies = await Promise.all([
@@ -85,8 +126,8 @@ async function main() {
       currency: "EUR",
       typeOfBusiness: "Bank",
       typeOfLicense: "MSB",
-      businessStatus: "Operational",
-      assetType: "Business",
+      businessStatus: "Active",
+      assetType: "Active Business (Licensed)",
       regulatory: "FINTRAC regulated",
       employees: "45",
       yearOfIssue: "2021",
@@ -101,8 +142,8 @@ async function main() {
       currency: "EUR",
       typeOfBusiness: "Fintech",
       typeOfLicense: "Payment Institution",
-      businessStatus: "Operational",
-      assetType: "Business",
+      businessStatus: "Active",
+      assetType: "Active Business (Licensed)",
       regulatory: "Brazilian Central Bank supervised",
       employees: "82",
       yearOfIssue: "2022",
@@ -117,8 +158,8 @@ async function main() {
       currency: "EUR",
       typeOfBusiness: "Payment",
       typeOfLicense: "FX License",
-      businessStatus: "Operational",
-      assetType: "Business",
+      businessStatus: "Active",
+      assetType: "Active Business (Licensed)",
       regulatory: "FCA monitored",
       employees: "31",
       yearOfIssue: "2020",
@@ -133,8 +174,8 @@ async function main() {
       currency: "USD",
       typeOfBusiness: "EMI",
       typeOfLicense: "Credit License",
-      businessStatus: "Growth Stage",
-      assetType: "Business",
+      businessStatus: "Not active",
+      assetType: "Active Business (Licensed)",
       regulatory: "ASIC regulated",
       employees: "58",
       yearOfIssue: "2023",
@@ -149,8 +190,8 @@ async function main() {
       currency: "EUR",
       typeOfBusiness: "Crypto",
       typeOfLicense: "Fintech License",
-      businessStatus: "Operational",
-      assetType: "Business",
+      businessStatus: "Active",
+      assetType: "Active Business (Licensed)",
       regulatory: "BaFin monitored",
       employees: "26",
       yearOfIssue: "2021",
@@ -165,8 +206,8 @@ async function main() {
       currency: "EUR",
       typeOfBusiness: "Bank",
       typeOfLicense: "PSP",
-      businessStatus: "Operational",
-      assetType: "Business",
+      businessStatus: "Active",
+      assetType: "Active Business (Licensed)",
       regulatory: "French regulator supervised",
       employees: "41",
       yearOfIssue: "2022",
@@ -181,8 +222,8 @@ async function main() {
       currency: "USD",
       typeOfBusiness: "Fintech",
       typeOfLicense: "Money Transmission",
-      businessStatus: "Operational",
-      assetType: "Business",
+      businessStatus: "Active",
+      assetType: "Active Business (Licensed)",
       regulatory: "State and federal compliance",
       employees: "67",
       yearOfIssue: "2021",
@@ -197,8 +238,8 @@ async function main() {
       currency: "EUR",
       typeOfBusiness: "Payment",
       typeOfLicense: "Payment Institution",
-      businessStatus: "Operational",
-      assetType: "Business",
+      businessStatus: "Active",
+      assetType: "Active Business (Licensed)",
       regulatory: "Spanish regulator approved",
       employees: "54",
       yearOfIssue: "2023",
@@ -213,8 +254,8 @@ async function main() {
       currency: "USD",
       typeOfBusiness: "EMI",
       typeOfLicense: "FX License",
-      businessStatus: "Operational",
-      assetType: "Business",
+      businessStatus: "Active",
+      assetType: "Active Business (Licensed)",
       regulatory: "Offshore compliance framework",
       employees: "24",
       yearOfIssue: "2022",
@@ -229,8 +270,8 @@ async function main() {
       currency: "USD",
       typeOfBusiness: "Crypto",
       typeOfLicense: "Payment License",
-      businessStatus: "Scaling",
-      assetType: "Business",
+      businessStatus: "Active",
+      assetType: "Active Business (Licensed)",
       regulatory: "MAS compliant",
       employees: "49",
       yearOfIssue: "2024",
@@ -245,8 +286,8 @@ async function main() {
       currency: "EUR",
       typeOfBusiness: "Fintech",
       typeOfLicense: "E-money License",
-      businessStatus: "Operational",
-      assetType: "Business",
+      businessStatus: "Active",
+      assetType: "Active Business (Licensed)",
       regulatory: "Brazilian authority approved",
       employees: "39",
       yearOfIssue: "2021",
@@ -261,8 +302,8 @@ async function main() {
       currency: "GBP",
       typeOfBusiness: "Payment",
       typeOfLicense: "Money Transfer",
-      businessStatus: "Operational",
-      assetType: "Business",
+      businessStatus: "Active",
+      assetType: "Active Business (Licensed)",
       regulatory: "FCA e-money oversight",
       employees: "63",
       yearOfIssue: "2020",
@@ -295,6 +336,31 @@ async function main() {
         },
       },
     });
+
+    if (asset === undefined) {
+      continue;
+    }
+
+    if (assetSeed === assetSeeds[0]) {
+      await prisma.message.createMany({
+        data: [
+          {
+            senderId: buyerUser.id,
+            receiverId: user.id,
+            assetId: asset.id,
+            content:
+              "Hello, I would like to understand the current client mix and the timeline for transferring this Canadian MSB.",
+          },
+          {
+            senderId: user.id,
+            receiverId: buyerUser.id,
+            assetId: asset.id,
+            content:
+              "Thanks Alex. The business has an active cross-border client base, and we can share the information memorandum under NDA.",
+          },
+        ],
+      });
+    }
 
     console.log(`Created asset: ${asset.id}`);
   }

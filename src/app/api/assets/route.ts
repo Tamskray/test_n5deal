@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/apiAuth";
+import { ASSET_TYPES, BUSINESS_STATUSES, BUSINESS_TYPES } from "@/types/asset";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -91,6 +92,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing required asset fields" }, { status: 400 });
   }
 
+  if (
+    !BUSINESS_TYPES.includes(body.typeOfBusiness as (typeof BUSINESS_TYPES)[number]) ||
+    !BUSINESS_STATUSES.includes(body.businessStatus as (typeof BUSINESS_STATUSES)[number]) ||
+    !ASSET_TYPES.includes(body.assetType as (typeof ASSET_TYPES)[number])
+  ) {
+    return NextResponse.json({ error: "Invalid asset field value" }, { status: 400 });
+  }
+
   const seller =
     (await prisma.seller.findUnique({ where: { userId: authorization.user.id } })) ??
     (authorization.user.id === "demo-seller"
@@ -109,8 +118,8 @@ export async function POST(request: Request) {
       currency: body.currency?.trim() || "EUR",
       typeOfBusiness: body.typeOfBusiness.trim(),
       typeOfLicense: body.typeOfLicense?.trim() || "Pending",
-      businessStatus: body.businessStatus?.trim() || "Draft",
-      assetType: body.assetType?.trim() || "Business",
+      businessStatus: body.businessStatus?.trim() || "Active",
+      assetType: body.assetType?.trim() || "Active Business (Licensed)",
       regulatory: body.regulatory?.trim() || null,
       employees: body.employees?.trim() || null,
       yearOfIssue: body.yearOfIssue?.trim() || null,

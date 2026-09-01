@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getRequestUser, requireRole } from "@/lib/apiAuth";
+import { ASSET_TYPES, BUSINESS_STATUSES, BUSINESS_TYPES } from "@/types/asset";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -47,6 +48,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const body = (await request.json()) as Record<string, string | number | undefined>;
+  const nextBusinessType = String(body.typeOfBusiness ?? asset.typeOfBusiness);
+  const nextBusinessStatus = String(body.businessStatus ?? asset.businessStatus);
+  const nextAssetType = String(body.assetType ?? asset.assetType);
+
+  if (
+    !BUSINESS_TYPES.includes(nextBusinessType as (typeof BUSINESS_TYPES)[number]) ||
+    !BUSINESS_STATUSES.includes(nextBusinessStatus as (typeof BUSINESS_STATUSES)[number]) ||
+    !ASSET_TYPES.includes(nextAssetType as (typeof ASSET_TYPES)[number])
+  ) {
+    return NextResponse.json({ error: "Invalid asset field value" }, { status: 400 });
+  }
+
   const updatedAsset = await prisma.asset.update({
     where: { id },
     data: {
@@ -54,10 +67,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       country: String(body.country ?? asset.country),
       askingPrice: Number(body.askingPrice ?? asset.askingPrice),
       currency: String(body.currency ?? asset.currency),
-      typeOfBusiness: String(body.typeOfBusiness ?? asset.typeOfBusiness),
-      businessStatus: String(body.businessStatus ?? asset.businessStatus),
+      typeOfBusiness: nextBusinessType,
+      businessStatus: nextBusinessStatus,
       typeOfLicense: String(body.typeOfLicense ?? asset.typeOfLicense),
-      assetType: String(body.assetType ?? asset.assetType),
+      assetType: nextAssetType,
       regulatory:
         body.regulatory === undefined ? asset.regulatory : String(body.regulatory) || null,
       employees: body.employees === undefined ? asset.employees : String(body.employees) || null,
