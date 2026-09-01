@@ -75,7 +75,7 @@ Benefit (Asset Tags)
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/Tamskray/test_n5deal.git
 cd test_n5deal
 
 # Install dependencies
