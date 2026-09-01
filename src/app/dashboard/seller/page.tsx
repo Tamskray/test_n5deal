@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 import AssetCard, { type Asset } from "@/components/AssetCard";
 import { RoleAccessNotice } from "@/components/RoleAccessNotice";
@@ -137,13 +138,21 @@ export default function SellerDashboardPage() {
             Welcome back, {user.name}. Manage your marketplace assets.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm hover:bg-blue-500"
-        >
-          Publish New Asset
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/dashboard/seller/buyers"
+            className="rounded-xl border border-emerald-600 px-5 py-3 font-semibold text-emerald-700 hover:bg-emerald-50"
+          >
+            Browse Buyers
+          </Link>
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm hover:bg-blue-500"
+          >
+            Publish New Asset
+          </button>
+        </div>
       </header>
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-5 text-xl font-semibold text-slate-900">My Assets</h2>

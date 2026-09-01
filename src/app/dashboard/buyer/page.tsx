@@ -27,6 +27,41 @@ type Message = {
   } | null;
 };
 
+function MessageList({ messages, emptyText }: { messages: Message[]; emptyText: string }) {
+  if (messages.length === 0) {
+    return <p className="text-sm text-slate-500">{emptyText}</p>;
+  }
+
+  return (
+    <div className="divide-y divide-slate-100">
+      {messages.map((message) => (
+        <article key={message.id} className="py-5 first:pt-0 last:pb-0">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h3 className="font-semibold text-slate-900">
+              {message.sender.buyer?.contactName ?? message.sender.email}
+            </h3>
+            <time dateTime={message.createdAt} className="text-xs text-slate-500">
+              {new Date(message.createdAt).toLocaleString()}
+            </time>
+          </div>
+          {message.asset ? (
+            <Link
+              href={`/all-listing/${message.asset.id}`}
+              className="mt-1 inline-flex text-xs font-semibold uppercase tracking-wide text-sky-600 transition hover:text-sky-800"
+            >
+              {message.asset.company?.name ?? message.asset.descriptionShort} ·{" "}
+              {message.asset.typeOfLicense} · {message.asset.country}
+            </Link>
+          ) : null}
+          <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-600">
+            {message.content}
+          </p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 export default function BuyerDashboardPage() {
   const { user } = useAuth();
   const userId = user?.id;
@@ -84,6 +119,8 @@ export default function BuyerDashboardPage() {
     setSaving(false);
     setNotice(response.ok ? "Investment profile saved." : "Unable to save your profile.");
   };
+  const sentMessages = messages.filter((message) => message.senderId === userId);
+  const receivedMessages = messages.filter((message) => message.senderId !== userId);
 
   if (!user || user.role !== "BUYER") return <RoleAccessNotice requiredRole="BUYER" />;
 
@@ -163,36 +200,29 @@ export default function BuyerDashboardPage() {
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-600">02</p>
           <h2 className="mt-2 text-xl font-bold text-slate-900">My Inquiries &amp; Messages</h2>
         </div>
-        {messages.length === 0 ? (
-          <p className="text-sm text-slate-500">No inquiries or messages yet.</p>
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {messages.map((message) => (
-              <article key={message.id} className="py-5 first:pt-0 last:pb-0">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h3 className="font-semibold text-slate-900">
-                    {message.sender.buyer?.contactName ?? message.sender.email}
-                  </h3>
-                  <time dateTime={message.createdAt} className="text-xs text-slate-500">
-                    {new Date(message.createdAt).toLocaleString()}
-                  </time>
-                </div>
-                {message.asset ? (
-                  <Link
-                    href={`/all-listing/${message.asset.id}`}
-                    className="mt-1 inline-flex text-xs font-semibold uppercase tracking-wide text-sky-600 transition hover:text-sky-800"
-                  >
-                    {message.asset.company?.name ?? message.asset.descriptionShort} ·{" "}
-                    {message.asset.typeOfLicense} · {message.asset.country}
-                  </Link>
-                ) : null}
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-600">
-                  {message.content}
-                </p>
-              </article>
-            ))}
+        <div className="grid gap-8 lg:grid-cols-2">
+          <div>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h3 className="text-lg font-semibold text-slate-900">Sent to sellers</h3>
+              <span className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">
+                {sentMessages.length}
+              </span>
+            </div>
+            <MessageList messages={sentMessages} emptyText="You have not sent any inquiries yet." />
           </div>
-        )}
+          <div>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h3 className="text-lg font-semibold text-slate-900">Received from sellers</h3>
+              <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                {receivedMessages.length}
+              </span>
+            </div>
+            <MessageList
+              messages={receivedMessages}
+              emptyText="No seller replies have arrived yet."
+            />
+          </div>
+        </div>
       </section>
     </div>
   );
