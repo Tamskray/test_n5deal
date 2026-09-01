@@ -5,31 +5,19 @@ import Link from "next/link";
 
 import AssetCard, { type Asset } from "@/components/AssetCard";
 import { RoleAccessNotice } from "@/components/RoleAccessNotice";
+import { FormField, FormSelect, FormTextarea } from "@/components/FormFields";
 import { useAuth } from "@/context/AuthContext";
 import { useApiFetch } from "@/hooks/useApiFetch";
+import { validateAssetForm, isFormValid, type ValidationErrors } from "@/lib/assetValidation";
 import {
   ASSET_TYPES,
   BUSINESS_STATUSES,
   BUSINESS_TYPES,
+  type AssetForm,
   type AssetType,
   type BusinessStatus,
   type BusinessType,
 } from "@/types/asset";
-
-type AssetForm = {
-  title: string;
-  descriptionShort: string;
-  country: string;
-  askingPrice: string;
-  currency: string;
-  typeOfBusiness: BusinessType | "";
-  businessStatus: BusinessStatus;
-  typeOfLicense: string;
-  assetType: AssetType;
-  regulatory: string;
-  employees: string;
-  yearOfIssue: string;
-};
 
 const emptyForm: AssetForm = {
   title: "",
@@ -51,6 +39,7 @@ export default function SellerDashboardPage() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const [refreshKey, setRefreshKey] = useState(0);
   const {
     data: assets,
@@ -68,6 +57,7 @@ export default function SellerDashboardPage() {
   function openCreateModal() {
     setEditingAsset(null);
     setForm(emptyForm);
+    setErrors({});
     setShowModal(true);
   }
 
@@ -87,12 +77,32 @@ export default function SellerDashboardPage() {
       employees: asset.employees ?? "",
       yearOfIssue: asset.yearOfIssue ?? "",
     });
+    setErrors({});
     setShowModal(true);
+  }
+
+  function updateFormField<K extends keyof AssetForm>(field: K, value: AssetForm[K]) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    // Clear error for this field when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   }
 
   async function saveAsset(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!user || user.role !== "SELLER") return;
+
+    // Validate form before submission
+    const formErrors = validateAssetForm(form);
+    if (!isFormValid(formErrors)) {
+      setErrors(formErrors);
+      return;
+    }
 
     const response = await fetch(editingAsset ? `/api/assets/${editingAsset.id}` : "/api/assets", {
       method: editingAsset ? "PATCH" : "POST",
@@ -110,6 +120,7 @@ export default function SellerDashboardPage() {
 
     if (!response.ok) return;
     setForm(emptyForm);
+    setErrors({});
     setShowModal(false);
     setRefreshKey((value) => value + 1);
   }
@@ -210,105 +221,125 @@ export default function SellerDashboardPage() {
               </button>
             </div>
             <form onSubmit={saveAsset} className="mt-6 grid gap-4 sm:grid-cols-2">
-              {(
-                [
-                  ["title", "Title"],
-                  ["country", "Country"],
-                  ["askingPrice", "Price"],
-                  ["currency", "Currency"],
-                  ["typeOfLicense", "Type of License"],
-                  ["regulatory", "Regulatory"],
-                  ["employees", "Employees"],
-                  ["yearOfIssue", "Year of Issue"],
-                ] as const
-              ).map(([name, label]) => (
-                <label key={name} className="text-sm font-medium text-slate-700">
-                  {label}
-                  <input
-                    required={["title", "country", "askingPrice", "typeOfBusiness"].includes(name)}
-                    type={
-                      name === "askingPrice" || name === "employees" || name === "yearOfIssue"
-                        ? "number"
-                        : "text"
-                    }
-                    value={form[name]}
-                    onChange={(event) => setForm({ ...form, [name]: event.target.value })}
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal outline-none focus:border-blue-500"
-                  />
-                </label>
-              ))}
-              <label className="text-sm font-medium text-slate-700">
-                Business Type
-                <select
-                  required
-                  value={form.typeOfBusiness}
-                  onChange={(event) =>
-                    setForm({ ...form, typeOfBusiness: event.target.value as BusinessType })
-                  }
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal outline-none focus:border-blue-500"
-                >
-                  <option value="" disabled>
-                    Select a business type
-                  </option>
-                  {BUSINESS_TYPES.map((businessType) => (
-                    <option key={businessType} value={businessType}>
-                      {businessType}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-sm font-medium text-slate-700">
-                Asset Type
-                <select
-                  value={form.assetType}
-                  onChange={(event) =>
-                    setForm({ ...form, assetType: event.target.value as AssetType })
-                  }
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal outline-none focus:border-blue-500"
-                >
-                  {ASSET_TYPES.map((assetType) => (
-                    <option key={assetType} value={assetType}>
-                      {assetType}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-sm font-medium text-slate-700">
-                Business Status
-                <select
-                  value={form.businessStatus}
-                  onChange={(event) =>
-                    setForm({ ...form, businessStatus: event.target.value as BusinessStatus })
-                  }
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal outline-none focus:border-blue-500"
-                >
-                  {BUSINESS_STATUSES.map((businessStatus) => (
-                    <option key={businessStatus} value={businessStatus}>
-                      {businessStatus}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-                Description
-                <textarea
-                  value={form.descriptionShort}
-                  onChange={(event) => setForm({ ...form, descriptionShort: event.target.value })}
-                  rows={3}
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal"
-                />
-              </label>
+              <FormField
+                label="Title"
+                name="title"
+                value={form.title}
+                onChange={(value) => updateFormField("title", value)}
+                error={errors.title}
+                required
+                placeholder="Asset title"
+              />
+              <FormField
+                label="Country"
+                name="country"
+                value={form.country}
+                onChange={(value) => updateFormField("country", value)}
+                error={errors.country}
+                required
+                placeholder="e.g., Canada, Brazil, Spain"
+              />
+              <FormField
+                label="Price"
+                name="askingPrice"
+                type="number"
+                value={form.askingPrice}
+                onChange={(value) => updateFormField("askingPrice", value)}
+                error={errors.askingPrice}
+                required
+                placeholder="0"
+              />
+              <FormField
+                label="Currency"
+                name="currency"
+                value={form.currency}
+                onChange={(value) => updateFormField("currency", value)}
+                error={errors.currency}
+                required
+              />
+              <FormSelect
+                label="Business Type"
+                name="typeOfBusiness"
+                value={form.typeOfBusiness}
+                onChange={(value) => updateFormField("typeOfBusiness", value as BusinessType)}
+                options={BUSINESS_TYPES.map((type) => ({ value: type, label: type }))}
+                error={errors.typeOfBusiness}
+                required
+              />
+              <FormSelect
+                label="Asset Type"
+                name="assetType"
+                value={form.assetType}
+                onChange={(value) => updateFormField("assetType", value as AssetType)}
+                options={ASSET_TYPES.map((type) => ({ value: type, label: type }))}
+                error={errors.assetType}
+                required
+              />
+              <FormSelect
+                label="Business Status"
+                name="businessStatus"
+                value={form.businessStatus}
+                onChange={(value) => updateFormField("businessStatus", value as BusinessStatus)}
+                options={BUSINESS_STATUSES.map((status) => ({ value: status, label: status }))}
+                error={errors.businessStatus}
+                required
+              />
+              <FormField
+                label="Type of License"
+                name="typeOfLicense"
+                value={form.typeOfLicense}
+                onChange={(value) => updateFormField("typeOfLicense", value)}
+                error={errors.typeOfLicense}
+                placeholder="e.g., MSB, PI, EMI"
+              />
+              <FormField
+                label="Regulatory"
+                name="regulatory"
+                value={form.regulatory}
+                onChange={(value) => updateFormField("regulatory", value)}
+                error={errors.regulatory}
+                placeholder="e.g., FINTRAC regulated"
+              />
+              <FormField
+                label="Employees"
+                name="employees"
+                type="number"
+                value={form.employees}
+                onChange={(value) => updateFormField("employees", value)}
+                error={errors.employees}
+                placeholder="0"
+              />
+              <FormField
+                label="Year of Issue"
+                name="yearOfIssue"
+                type="number"
+                value={form.yearOfIssue}
+                onChange={(value) => updateFormField("yearOfIssue", value)}
+                error={errors.yearOfIssue}
+                placeholder={String(new Date().getFullYear())}
+              />
+              <FormTextarea
+                label="Description"
+                name="descriptionShort"
+                value={form.descriptionShort}
+                onChange={(value) => updateFormField("descriptionShort", value)}
+                error={errors.descriptionShort}
+                required
+                placeholder="Describe the asset in detail (10-500 characters)"
+                rows={3}
+              />
               <div className="flex justify-end gap-3 sm:col-span-2">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700"
+                  className="rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500"
+                  disabled={Object.keys(errors).length > 0}
+                  className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-500 disabled:bg-slate-300 disabled:cursor-not-allowed"
                 >
                   {editingAsset ? "Save Changes" : "Publish Asset"}
                 </button>

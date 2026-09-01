@@ -3,7 +3,13 @@
 import Link from "next/link";
 
 import { RoleAccessNotice } from "@/components/RoleAccessNotice";
+import { FormField, FormTextarea } from "@/components/FormFields";
 import { useAuth } from "@/context/AuthContext";
+import {
+  validateBuyerProfile,
+  isProfileValid,
+  type BuyerValidationErrors,
+} from "@/lib/buyerValidation";
 import { useEffect, useState, type FormEvent } from "react";
 
 type BuyerProfile = {
@@ -70,6 +76,7 @@ export default function BuyerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
+  const [errors, setErrors] = useState<BuyerValidationErrors>({});
 
   useEffect(() => {
     if (!userId) {
@@ -104,11 +111,27 @@ export default function BuyerDashboardPage() {
       investmentInterests: current?.investmentInterests ?? "",
       [field]: value,
     }));
+    // Clear error for this field when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const saveProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!profile || !userId) return;
+
+    // Validate profile before submission
+    const formErrors = validateBuyerProfile(profile);
+    if (!isProfileValid(formErrors)) {
+      setErrors(formErrors);
+      return;
+    }
+
     setSaving(true);
     setNotice("");
     const response = await fetch("/api/buyer/profile", {
@@ -149,36 +172,37 @@ export default function BuyerDashboardPage() {
         {profile ? (
           <form onSubmit={saveProfile} className="space-y-5">
             <div className="grid gap-5 sm:grid-cols-2">
-              <label className="text-sm font-semibold text-slate-700">
-                Contact name
-                <input
-                  value={profile.contactName}
-                  onChange={(event) => updateProfile("contactName", event.target.value)}
-                  className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-                />
-              </label>
-              <label className="text-sm font-semibold text-slate-700">
-                Company name
-                <input
-                  value={profile.companyName ?? ""}
-                  onChange={(event) => updateProfile("companyName", event.target.value)}
-                  className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-                />
-              </label>
-            </div>
-            <label className="block text-sm font-semibold text-slate-700">
-              Investment interests
-              <textarea
-                rows={5}
-                value={profile.investmentInterests ?? ""}
-                onChange={(event) => updateProfile("investmentInterests", event.target.value)}
-                className="mt-2 w-full resize-y rounded-xl border border-slate-300 px-4 py-3 font-normal outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+              <FormField
+                label="Contact name"
+                name="contactName"
+                value={profile.contactName}
+                onChange={(value) => updateProfile("contactName", value)}
+                error={errors.contactName}
+                required
+                placeholder="Your full name"
               />
-            </label>
+              <FormField
+                label="Company name"
+                name="companyName"
+                value={profile.companyName ?? ""}
+                onChange={(value) => updateProfile("companyName", value)}
+                error={errors.companyName}
+                placeholder="Your company or firm name"
+              />
+            </div>
+            <FormTextarea
+              label="Investment interests"
+              name="investmentInterests"
+              value={profile.investmentInterests ?? ""}
+              onChange={(value) => updateProfile("investmentInterests", value)}
+              error={errors.investmentInterests}
+              placeholder="Describe the types of assets and financial businesses you're interested in acquiring (minimum 10 characters)"
+              rows={5}
+            />
             <div className="flex flex-wrap items-center gap-4">
               <button
                 type="submit"
-                disabled={saving}
+                disabled={saving || Object.keys(errors).length > 0}
                 className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {saving ? "Saving..." : "Save profile"}
