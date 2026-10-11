@@ -10,6 +10,8 @@ export function Navbar() {
   const pathname = usePathname();
   const navigationItems = [
     { href: "/all-listing", label: "All Listings" },
+    { href: "/check-icons", label: "Icons" },
+    { href: "/react-test", label: "Test" },
     { href: "/dashboard/buyer", label: "Buyer" },
     { href: "/dashboard/seller", label: "Seller" },
     { href: "/dashboard/manager", label: "Manager" },
@@ -20,7 +22,7 @@ export function Navbar() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 rounded-full border border-slate-200/80 bg-white/90 px-4 py-2 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:px-5">
         <div className="flex min-w-0 items-center gap-3">
           <Link href="/" className="shrink-0 px-2 text-lg font-bold tracking-tight text-slate-900">
-            N5deal
+            Test
           </Link>
           <nav className="hidden items-center gap-1 rounded-full bg-slate-50 p-1 text-sm md:flex">
             {navigationItems.map((item) => {
